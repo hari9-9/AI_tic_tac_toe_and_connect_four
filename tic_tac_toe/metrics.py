@@ -14,7 +14,7 @@ def simulate_game(player1, player2):
 def simulate_batch(opponent_class, n):
     """
     Simulate n games between DefaultOpponent and the given AI opponent.
-    The starting player is randomized such that each has a 50% chance to start.
+    Randomizes the order so that each has a 50% chance to start.
     Returns a dictionary of metrics.
     """
     metrics = {
@@ -26,21 +26,27 @@ def simulate_batch(opponent_class, n):
     }
 
     for _ in range(n):
-        # Randomize who starts:
-        # If DefaultOpponent starts, it gets marker 'X' (first move) and AI gets 'O'
-        # Otherwise, the AI gets 'X' and DefaultOpponent gets 'O'
         if random.random() < 0.5:
+            # DefaultOpponent starts: assign 'X' to default
             default_player = DefaultOpponent('X')
             ai_player = opponent_class('O')
+            game_players = (default_player, ai_player)
             default_marker = 'X'
         else:
+            # AI starts: assign 'X' to the AI, so DefaultOpponent is second with 'O'
             default_player = DefaultOpponent('O')
             ai_player = opponent_class('X')
+            game_players = (ai_player, default_player)
             default_marker = 'O'
-        
-        winner, moves = simulate_game(default_player, ai_player)
+
+        game = TicTacToeGame(*game_players)
+        moves = 0
+        while not game.game_over:
+            game.auto_move()
+            moves += 1
         metrics['total_moves'] += moves
 
+        winner = game.winner
         if winner is None:
             metrics['draws'] += 1
         elif winner == default_marker:
@@ -53,7 +59,7 @@ def simulate_batch(opponent_class, n):
 
 def main():
     # Number of games to simulate per matchup.
-    n = 100
+    n = 10
 
     # Simulation: DefaultOpponent vs AIPlayer (Minimax)
     print("Simulating DefaultOpponent vs AIPlayer (Minimax)...")
